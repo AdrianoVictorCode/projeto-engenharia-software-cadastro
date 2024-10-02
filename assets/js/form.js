@@ -15,30 +15,42 @@ function main() {
     }, 3000);
 }
 
-async function conclude(){
-    if(!agreed) {
+async function conclude() {
+    if (!agreed) {
         showPopup("Você precisa concordar com os nossos termos!", document.getElementById('input-terms'));
         return;
     }
 
     let gate = true;
+
+    // Verificar se todos os requisitos foram preenchidos corretamente
     requirements.forEach(requirement => {
-        if(!(values[requirement] === true || values[requirement] === false)) gate = false;
+        if (values[requirement] === undefined || values[requirement] === null) {
+            gate = false;
+        }
     });
 
-    if(gate) {
+    if (gate) {
         values.state = "Aguardando";
         const json = JSON.stringify(values);
-        const record = await pb.collection('Requests').create(json).catch((error) => { console.log(error)} );
-        if(!record) gate = false;
+        const record = await pb.collection('Requests').create(json).catch((error) => { 
+            console.log(error);
+            return null; // Retorne null se a criação falhar
+        });
+
+        if (!record) {
+            gate = false;
+        }
     }
 
-    if(!gate) {
+    if (!gate) {
         showPopup("Algum dos campos obrigatórios não foi preenchido corretamente!", document.getElementById('input-terms'));
         return;
     }
+
     $('#conclusion').modal('show');
 }
+
 
 async function changePage(type) {
     let stepElement = document.getElementById(`step_${pageIndex}`);
