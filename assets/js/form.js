@@ -25,21 +25,25 @@ async function conclude() {
 
     // Verificar se todos os requisitos foram preenchidos corretamente
     requirements.forEach(requirement => {
+        // Assegura que cada requisito deve ser um booleano
         if (values[requirement] === undefined || values[requirement] === null) {
             gate = false;
+        } else if (typeof values[requirement] !== "boolean") {
+            gate = false; // Se não for booleano, não deve passar
         }
     });
 
+    // Se todos os requisitos estão corretos, prossegue
     if (gate) {
         values.state = "Aguardando";
         const json = JSON.stringify(values);
-        const record = await pb.collection('Requests').create(json).catch((error) => { 
+        
+        try {
+            const record = await pb.collection('Requests').create(json);
+            if (!record) gate = false; // Se não conseguir criar o registro, impede a continuação
+        } catch (error) {
             console.log(error);
-            return null; // Retorne null se a criação falhar
-        });
-
-        if (!record) {
-            gate = false;
+            gate = false; // Define gate como falso se ocorrer erro na criação
         }
     }
 
@@ -50,6 +54,26 @@ async function conclude() {
 
     $('#conclusion').modal('show');
 }
+
+// Certifique-se que o changeValue esteja capturando os valores corretamente
+async function changeValue(component) {
+    const key = component.id.slice(6);
+    let value = component.value;
+
+    if (value === "true") value = true;
+    else if (value === "false") value = false;
+
+    // Capturando valores booleanos para requisitos
+    if (requirements.includes(key)) {
+        values[key] = value; // Armazena o valor booleano diretamente
+    } else {
+        // Outras validações...
+    }
+
+    // O resto da função continua como antes
+    console.log(values);
+}
+
 
 
 async function changePage(type) {
